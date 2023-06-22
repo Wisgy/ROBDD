@@ -105,7 +105,7 @@ class Parser {
         if (token.empty() && !next_token(is)) return nullptr;
         if (token == "!") {
             token.clear();
-            return create<Imply>(Single(is), shared_ptr<False>());
+            return create<Imply>(Single(is), formula::FalseVal);
         } else if (token == "(") {
             token.clear();
             auto E = Equ(is);
