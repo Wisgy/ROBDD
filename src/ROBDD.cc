@@ -83,10 +83,20 @@ shared_ptr<formula> Compute(shared_ptr<formula> node) {
     }
 }
 int main(int argv, char *argc[]) {
-    if (argv != 3) assert(false);
-    ifstream file(argc[1]);
+    if (argv != 4) assert(false);
+    auto input_file_path = [](char *path, char *num) -> string {
+        string input = "input";
+        string suffix = ".txt";
+        return path + input + num + suffix;
+    };
+    auto output_file_path = [](char *path, char *num) -> string {
+        string output = "output";
+        string suffix = ".json";
+        return path + output + num + suffix;
+    };
+    ifstream file(input_file_path(argc[2], argc[1]));
     Parser parser(file);
     auto decision_root = Compute(parser.root);
-    ofstream output(argc[2]);
+    ofstream output(output_file_path(argc[3], argc[1]));
     output << decision_root->print() << endl;
 }
