@@ -124,7 +124,9 @@ class Var final : public formula {
     }
     virtual std::shared_ptr<formula> copy() override {
         auto name = this->id;
-        return std::shared_ptr<Var>(new Var(std::move(name)));
+        auto copy_var = std::shared_ptr<Var>(new Var(std::move(name)));
+        copy_var->ops = this->ops;
+        return copy_var;
     }
 };
 class True final : public formula {
