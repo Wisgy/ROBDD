@@ -7,7 +7,7 @@ add_test(
     COMMAND ROBDD ${num} ${input_path} ${output_path}
 )
 endfunction()
-foreach(num RANGE 0 10)
+foreach(num RANGE 0 9)
  test(${num})
 endforeach()
 

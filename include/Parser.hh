@@ -16,6 +16,11 @@ class Parser {
     string token;
 
   private:
+    string not_id = "¬";
+    string and_id = "∧";
+    string or_id = "∨";
+    string imply_id = "→";
+    string equal_id = "↔";
     bool next_token(ifstream &is) {
         if (is >> token) {
             return true;
@@ -31,7 +36,7 @@ class Parser {
     shared_ptr<formula> Equ_(ifstream &is, shared_ptr<formula> former) {
         if (token.empty())
             if (!next_token(is)) return nullptr;
-        if (token == "=") {
+        if (token == equal_id) {
             token.clear();
             auto I = Imp(is);
             auto E = create<Equal>(former, I);
@@ -53,7 +58,7 @@ class Parser {
     shared_ptr<formula> Imp_(ifstream &is, shared_ptr<formula> former) {
         if (token.empty())
             if (!next_token(is)) return nullptr;
-        if (token == "->") {
+        if (token == imply_id) {
             token.clear();
             auto D = Disj(is);
             auto I = create<Imply>(former, D);
@@ -72,7 +77,7 @@ class Parser {
     shared_ptr<formula> Disj_(ifstream &is, shared_ptr<formula> former) {
         if (token.empty())
             if (!next_token(is)) return nullptr;
-        if (token == "or") {
+        if (token == or_id) {
             token.clear();
             auto C = Conj(is);
             auto D = create<Or>(former, C);
@@ -91,7 +96,7 @@ class Parser {
     shared_ptr<formula> Conj_(ifstream &is, shared_ptr<formula> former) {
         if (token.empty())
             if (!next_token(is)) return nullptr;
-        if (token == "and") {
+        if (token == and_id) {
             token.clear();
             auto S = Single(is);
             auto C = create<And>(former, S);
@@ -103,7 +108,7 @@ class Parser {
     }
     shared_ptr<formula> Single(ifstream &is) {
         if (token.empty() && !next_token(is)) return nullptr;
-        if (token == "!") {
+        if (token == not_id) {
             token.clear();
             return create<Imply>(Single(is), formula::FalseVal);
         } else if (token == "(") {
