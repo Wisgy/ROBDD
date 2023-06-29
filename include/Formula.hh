@@ -56,20 +56,21 @@ class formula {
 };
 class CTL : public formula {
   public:
-    CTL(std::string &&name, OP op, std::shared_ptr<formula> oper)
-        : formula(std::move(name), op, {oper}) {}
+    CTL(std::string &&name, OP op, std::vector<std::shared_ptr<formula>> ops)
+        : formula(std::move(name), op, std::move(ops)) {}
 };
 class EX final : public CTL {
   public:
-    EX(std::shared_ptr<formula> oper) : CTL("EG", OP::EG, oper) {}
+    EX(std::shared_ptr<formula> oper) : CTL("EX", OP::EX, {oper}) {}
 };
 class EG final : public CTL {
   public:
-    EG(std::shared_ptr<formula> oper) : CTL("EG", OP::EG, oper) {}
+    EG(std::shared_ptr<formula> oper) : CTL("EG", OP::EG, {oper}) {}
 };
 class EU final : public CTL {
   public:
-    EU(std::shared_ptr<formula> oper) : CTL("EG", OP::EG, oper) {}
+    EU(std::shared_ptr<formula> lhs, std::shared_ptr<formula> rhs)
+        : CTL("EU", OP::EU, {lhs, rhs}) {}
 };
 class Bin : public formula {
   public:

@@ -10,7 +10,7 @@
 using namespace std;
 class Parser {
   public:
-    Parser(ifstream &is) { root = Equ(is); }
+    Parser(ifstream &is) { root = EU_(is); }
     shared_ptr<formula> root;
     // vector<string> stack;
     string token;
@@ -26,6 +26,24 @@ class Parser {
             return true;
         } else
             return false;
+    }
+    shared_ptr<formula> EU_(ifstream &is) {
+        if (token.empty())
+            if (!next_token(is)) return nullptr;
+        if (token == "E") {
+            next_token(is);
+            auto l_bracket = token;
+            token.clear();
+            auto lhs = EU_(is);
+            if (token.empty()) next_token(is);
+            token.clear();
+            auto rhs = EU_(is);
+            next_token(is);
+            token.clear();
+            return create<EU>(lhs, rhs);
+        } else {
+            return Equ(is);
+        }
     }
     shared_ptr<formula> Equ(ifstream &is) {
         auto I = Imp(is);
@@ -108,12 +126,16 @@ class Parser {
     }
     shared_ptr<formula> Single(ifstream &is) {
         if (token.empty() && !next_token(is)) return nullptr;
+        if (token == "U" || token == "]") assert(false);
         if (token == not_id) {
             token.clear();
             return create<Imply>(Single(is), formula::FalseVal);
         } else if (token == "EG") {
             token.clear();
             return create<EG>(Single(is));
+        } else if (token == "EX") {
+            token.clear();
+            return create<EX>(Single(is));
         } else if (token == "(") {
             token.clear();
             auto E = Equ(is);

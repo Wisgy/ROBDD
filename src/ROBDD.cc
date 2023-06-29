@@ -48,7 +48,11 @@ inline bool is_CTL(shared_ptr<formula> node) {
         return false;
 }
 shared_ptr<formula> ComputeEG(shared_ptr<formula> node);
+shared_ptr<formula> ComputeEX(shared_ptr<formula> node);
+shared_ptr<formula> ComputeEU(shared_ptr<formula> node);
 shared_ptr<formula> Compute(shared_ptr<formula> node) {
+    if (is_a<EX>(node)) return ComputeEX(node);
+    if (is_a<EU>(node)) return ComputeEU(node);
     if (is_CTL(node)) return ComputeEG(node);
     if (is_a<True>(node)) return formula::TrueVal;
     if (is_a<False>(node)) return formula::FalseVal;
@@ -229,48 +233,48 @@ shared_ptr<formula> ComputeEG(shared_ptr<formula> node) {
 }
 shared_ptr<formula> ComputeEX(shared_ptr<formula> node) {
     auto phi = Compute(node->ops[0]);
-    set<shared_ptr<State>> T;
-    for (auto iter = states.begin(); iter != states.end(); iter++) {
-        if (StateInPhi(iter->second, phi)) T.insert(iter->second);
-    }
-    set<shared_ptr<State>> U = T;
+    set<shared_ptr<State>> U;
     set<shared_ptr<State>> V;
-    while (1) {
-        for (auto s : T) {
-            for (auto t : s->suc) {
-                if (U.count(t)) {
-                    V.insert(s);
-                }
-            }
-        }
-        auto tn = Compute(U);
-        auto tn1 = Compute(create<And>(tn->copy(), Compute(V)));
-        U = V;
-        V.clear();
-        if (*tn == *tn1) return tn;
+    for (auto iter = states.begin(); iter != states.end(); iter++) {
+        if (StateInPhi(iter->second, phi)) U.insert(iter->second);
     }
+    for (auto iter = states.begin(); iter != states.end(); iter++) {
+        for (auto suc : iter->second->suc) {
+            if (U.count(suc)) V.insert(iter->second);
+        }
+    }
+    return Compute(V);
 }
 shared_ptr<formula> ComputeEU(shared_ptr<formula> node) {
-    auto phi = Compute(node->ops[0]);
-    set<shared_ptr<State>> T;
+    auto phi1 = Compute(node->ops[0]);
+    auto phi2 = Compute(node->ops[1]);
+    set<shared_ptr<State>> U1;
+    set<shared_ptr<State>> U2;
     for (auto iter = states.begin(); iter != states.end(); iter++) {
-        if (StateInPhi(iter->second, phi)) T.insert(iter->second);
+        if (StateInPhi(iter->second, phi1)) U1.insert(iter->second);
+        if (StateInPhi(iter->second, phi2)) U2.insert(iter->second);
     }
-    set<shared_ptr<State>> U = T;
     set<shared_ptr<State>> V;
+    for (auto s : U1) {
+        for (auto t : s->suc) {
+            if (U2.count(t)) {
+                V.insert(s);
+            }
+        }
+    }
+    set<shared_ptr<State>> tmp = V;
     while (1) {
-        for (auto s : T) {
+        for (auto s : U1) {
             for (auto t : s->suc) {
-                if (U.count(t)) {
+                if (V.count(t)) {
                     V.insert(s);
                 }
             }
         }
-        auto tn = Compute(U);
-        auto tn1 = Compute(create<And>(tn->copy(), Compute(V)));
-        U = V;
-        V.clear();
-        if (*tn == *tn1) return tn;
+        if (tmp == V)
+            return Compute(V);
+        else
+            tmp = V;
     }
 }
 int main(int argv, char *argc[]) {
