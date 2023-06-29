@@ -272,7 +272,7 @@ shared_ptr<formula> ComputeEU(shared_ptr<formula> node) {
             }
         }
         if (tmp == V)
-            return Compute(V);
+            return Compute(create<Or>(Compute(V), Compute(U2)));
         else
             tmp = V;
     }
