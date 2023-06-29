@@ -1,6 +1,7 @@
 #pragma once
 #include <cassert>
 #include <memory>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -8,7 +9,7 @@ template <typename type, typename... Args>
 std::shared_ptr<type> create(Args... args) {
     return std::shared_ptr<type>(new type{std::forward<Args>(args)...});
 }
-enum class OP { NONE, VAR, OR, AND, IMPLY, EQUAL };
+enum class OP { NONE, BOOL, VAR, OR, AND, IMPLY, EQUAL, EX, EG, EU };
 class formula {
   public:
     formula(std::string &&name, OP op = OP::NONE,
@@ -39,19 +40,37 @@ class formula {
         assert(false);
     }
     virtual std::shared_ptr<formula> copy() { assert(false); }
+    virtual bool run(std::set<std::string> &vars) { assert(false); }
 
     virtual bool operator==(const formula &other) {
         if (this->ops.size() != other.ops.size()) return false;
         for (unsigned i = 0; i < this->ops.size(); i++) {
-            if (this->ops[i] != other.ops[i]) return false;
+            if (!(*this->ops[i] == *other.ops[i])) return false;
         }
         if (this->name == other.name)
             return true;
         else
             return false;
     }
+    virtual bool operator!=(const formula &other) { assert(false); }
 };
-
+class CTL : public formula {
+  public:
+    CTL(std::string &&name, OP op, std::shared_ptr<formula> oper)
+        : formula(std::move(name), op, {oper}) {}
+};
+class EX final : public CTL {
+  public:
+    EX(std::shared_ptr<formula> oper) : CTL("EG", OP::EG, oper) {}
+};
+class EG final : public CTL {
+  public:
+    EG(std::shared_ptr<formula> oper) : CTL("EG", OP::EG, oper) {}
+};
+class EU final : public CTL {
+  public:
+    EU(std::shared_ptr<formula> oper) : CTL("EG", OP::EG, oper) {}
+};
 class Bin : public formula {
   public:
     Bin(std::shared_ptr<formula> lhs, std::shared_ptr<formula> rhs,
@@ -114,6 +133,9 @@ class Var final : public formula {
         : id(std::string(name)),
           formula(std::move(name), OP::VAR,
                   {formula::TrueVal, formula::FalseVal}) {}
+    Var(std::string &&name, std::vector<std::shared_ptr<formula>> &&ops)
+        : id(std::string(name)),
+          formula(std::move(name), OP::VAR, std::move(ops)) {}
     std::string id;
     virtual std::shared_ptr<formula>
     create(std::vector<std::shared_ptr<formula>> &&ops) override {
@@ -128,10 +150,17 @@ class Var final : public formula {
         copy_var->ops = this->ops;
         return copy_var;
     }
+    virtual bool run(std::set<std::string> &vars) override {
+        if (vars.find(this->name) == vars.end()) // the set of vars doesn't have
+                                                 // the current var so -> false
+            return ops[1]->run(vars);
+        else
+            return ops[0]->run(vars);
+    }
 };
 class True final : public formula {
   public:
-    True() : formula("1") {}
+    True() : formula("1", OP::BOOL) {}
     virtual std::shared_ptr<formula>
     create(std::vector<std::shared_ptr<formula>> &&ops) override {
         assert(false);
@@ -139,10 +168,11 @@ class True final : public formula {
     virtual std::shared_ptr<formula> copy() override {
         return formula::TrueVal;
     }
+    virtual bool run(std::set<std::string> &vars) override { return true; }
 };
 class False final : public formula {
   public:
-    False() : formula("0") {}
+    False() : formula("0", OP::BOOL) {}
     virtual std::shared_ptr<formula>
     create(std::vector<std::shared_ptr<formula>> &&ops) override {
         assert(false);
@@ -150,4 +180,5 @@ class False final : public formula {
     virtual std::shared_ptr<formula> copy() override {
         return formula::FalseVal;
     }
+    virtual bool run(std::set<std::string> &vars) override { return false; }
 };

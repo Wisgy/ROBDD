@@ -111,6 +111,9 @@ class Parser {
         if (token == not_id) {
             token.clear();
             return create<Imply>(Single(is), formula::FalseVal);
+        } else if (token == "EG") {
+            token.clear();
+            return create<EG>(Single(is));
         } else if (token == "(") {
             token.clear();
             auto E = Equ(is);
