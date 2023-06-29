@@ -10,12 +10,14 @@
 using namespace std;
 class Parser {
   public:
-    Parser(ifstream &is) { root = EU_(is); }
+    Parser(ifstream &is) { root = Equ(is); }
     shared_ptr<formula> root;
     // vector<string> stack;
     string token;
 
   private:
+    string true_id = "T";
+    string false_id = "F";
     string not_id = "¬";
     string and_id = "∧";
     string or_id = "∨";
@@ -26,24 +28,6 @@ class Parser {
             return true;
         } else
             return false;
-    }
-    shared_ptr<formula> EU_(ifstream &is) {
-        if (token.empty())
-            if (!next_token(is)) return nullptr;
-        if (token == "E") {
-            next_token(is);
-            auto l_bracket = token;
-            token.clear();
-            auto lhs = EU_(is);
-            if (token.empty()) next_token(is);
-            token.clear();
-            auto rhs = EU_(is);
-            next_token(is);
-            token.clear();
-            return create<EU>(lhs, rhs);
-        } else {
-            return Equ(is);
-        }
     }
     shared_ptr<formula> Equ(ifstream &is) {
         auto I = Imp(is);
@@ -127,7 +111,11 @@ class Parser {
     shared_ptr<formula> Single(ifstream &is) {
         if (token.empty() && !next_token(is)) return nullptr;
         if (token == "U" || token == "]") assert(false);
-        if (token == not_id) {
+        if (token == true_id) {
+            return formula::TrueVal;
+        } else if (token == false_id) {
+            return formula::FalseVal;
+        } else if (token == not_id) {
             token.clear();
             return create<Imply>(Single(is), formula::FalseVal);
         } else if (token == "EG") {
@@ -136,6 +124,29 @@ class Parser {
         } else if (token == "EX") {
             token.clear();
             return create<EX>(Single(is));
+        } else if (token == "E") {
+            next_token(is); // l_bracket
+            token.clear();
+            auto lhs = Equ(is);
+            if (token.empty()) next_token(is);
+            token.clear();
+            auto rhs = Equ(is);
+            next_token(is); // r_bracket
+            token.clear();
+            return create<EU>(lhs, rhs);
+        } else if (token == "EF") {
+            token.clear();
+            return create<EU>(formula::TrueVal, Single(is));
+        } else if (token == "AF") {
+            token.clear();
+            return create<Imply>(
+                create<EG>(create<Imply>(Single(is), formula::FalseVal)),
+                formula::FalseVal);
+        } else if (token == "AX") {
+            token.clear();
+            return create<Imply>(
+                create<EX>(create<Imply>(Single(is), formula::FalseVal)),
+                formula::FalseVal);
         } else if (token == "(") {
             token.clear();
             auto E = Equ(is);

@@ -278,7 +278,7 @@ shared_ptr<formula> ComputeEU(shared_ptr<formula> node) {
     }
 }
 int main(int argv, char *argc[]) {
-    if (argv != 5) assert(false);
+    if (argv != 6) assert(false);
     auto input_file_path = [](char *path, char *num) -> string {
         string input = "input";
         string suffix = ".txt";
@@ -289,16 +289,16 @@ int main(int argv, char *argc[]) {
         string suffix = ".json";
         return path + output + num + suffix;
     };
-    auto diagram_file_path = [](char *path) -> string {
+    auto diagram_file_path = [](char *path, char *num) -> string {
         string output = "diagram";
         string suffix = ".txt";
-        return path + output + suffix;
+        return path + output + num + suffix;
     };
-    ifstream diagram(diagram_file_path(argc[4]));
-    ifstream file(input_file_path(argc[2], argc[1]));
+    ifstream diagram(diagram_file_path(argc[5], argc[2]));
+    ifstream file(input_file_path(argc[3], argc[1]));
     Parser parser(file);
     LoadDiagram(diagram);
     auto decision_root = Compute(parser.root);
-    ofstream output(output_file_path(argc[3], argc[1]));
+    ofstream output(output_file_path(argc[4], argc[1]));
     output << decision_root->print() << endl;
 }
