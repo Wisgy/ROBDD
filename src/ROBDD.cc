@@ -93,13 +93,13 @@ shared_ptr<formula> Compute(shared_ptr<formula> node) {
                 break;
         }
     } else if (is_bool(lhs) || (!is_bool(rhs) && lhs->name > rhs->name)) {
-        auto new_lhs = Compute(node->create({lhs->copy(), rhs->ops[0]}));
-        auto new_rhs = Compute(node->create({lhs->copy(), rhs->ops[1]}));
+        auto new_lhs = Compute(node->create({lhs, rhs->ops[0]}));
+        auto new_rhs = Compute(node->create({lhs, rhs->ops[1]}));
         if (new_lhs == new_rhs) return new_lhs;
         return rhs->create({new_lhs, new_rhs});
     } else if (is_bool(rhs) || lhs->name < rhs->name) {
-        auto new_lhs = Compute(node->create({lhs->ops[0], rhs->copy()}));
-        auto new_rhs = Compute(node->create({lhs->ops[1], rhs->copy()}));
+        auto new_lhs = Compute(node->create({lhs->ops[0], rhs}));
+        auto new_rhs = Compute(node->create({lhs->ops[1], rhs}));
         if (new_lhs == new_rhs) return new_lhs;
         return lhs->create({new_lhs, new_rhs});
     } else {
